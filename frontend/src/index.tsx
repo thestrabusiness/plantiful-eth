@@ -4,7 +4,7 @@ import reportWebVitals from "./reportWebVitals";
 import { DAppProvider } from "@usedapp/core";
 
 import App from "./App";
-import "./index.css";
+import "./App.css";
 
 ReactDOM.render(
   <React.StrictMode>
