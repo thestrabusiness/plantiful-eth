@@ -48,6 +48,27 @@ contract PlantifulERC721 is ERC721, Ownable {
     plant.lastWateredAt = block.timestamp;
   }
 
+  function getUsersPlants(address user) public view returns(Plant[] memory){
+    uint256 tokenCount = balanceOf(user);
+    if(tokenCount == 0) {
+      return new Plant[](0);
+    } else {
+      Plant[] memory result = new Plant[](tokenCount);
+      uint256 totalPlants = nextId;
+      uint256 resultIndex = 0;
+      uint256 i;
+
+      for(i=0; i<totalPlants; i++){
+        if(ownerOf(i) == user) {
+          result[resultIndex] = _plantDetails[i];
+          resultIndex++;
+        }
+      }
+
+      return result;
+    }
+  }
+
   function _beforeTokenTransfer(
     address from,
     address to,
