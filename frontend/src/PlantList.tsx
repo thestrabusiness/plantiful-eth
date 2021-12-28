@@ -1,7 +1,7 @@
 import React, { FC } from "react";
 import { useEthers } from "@usedapp/core";
 
-import { useGetUsersPlants } from "./hooks";
+import { useGetUsersPlants, useWaterPlant } from "./hooks";
 import { Plant } from "./hooks/useGetUsersPlants";
 import { BigNumber } from "ethers";
 
@@ -19,14 +19,28 @@ const bigNumberToHours = (value: BigNumber): number => {
 };
 
 const PlantListItem: FC<PlantListItemProps> = ({
-  plant: { generatedAt, lastWateredAt, droughtResistance, kind },
+  plant: { id, generatedAt, lastWateredAt, droughtResistance, kind },
 }) => {
+  const { state, send: waterPlant } = useWaterPlant();
+
+  const sendingTransaction = state.status === "Mining";
+  const buttonLabel = sendingTransaction ? "Watering..." : "Water";
+
   return (
     <div className="text-center mx-2">
       <div>Created at: {bigNumberToDateString(generatedAt)}</div>
       <div>Last watered at: {bigNumberToDateString(lastWateredAt)}</div>
       <div>Drought resistance: {bigNumberToHours(droughtResistance)} hours</div>
       <div>Kind: {kind}</div>
+      <button
+        className="bg-blue-100 border border-blue-200 px-4 py-2 my-2"
+        onClick={() => {
+          waterPlant(id);
+        }}
+        disabled={sendingTransaction}
+      >
+        {buttonLabel}
+      </button>
     </div>
   );
 };

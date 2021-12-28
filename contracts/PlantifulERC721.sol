@@ -9,6 +9,7 @@ contract PlantifulERC721 is ERC721, Ownable {
   enum PlantKind{ MOSS, FERN, CONIFER, FLOWERING }
 
   struct Plant {
+    uint256 id;
     uint256 generatedAt;
     uint256 lastWateredAt;
     uint256 droughtResistance;
@@ -23,6 +24,7 @@ contract PlantifulERC721 is ERC721, Ownable {
 
   function mint(uint256 droughtResistance, PlantKind kind) public onlyOwner {
     _plantDetails[nextId] = Plant(
+      nextId,
       block.timestamp,
       block.timestamp,
       droughtResistance,

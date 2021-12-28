@@ -7,6 +7,7 @@ import {
 } from "../contracts";
 
 export type Plant = {
+  id: BigNumber;
   generatedAt: BigNumber;
   lastWateredAt: BigNumber;
   droughtResistance: BigNumber;
@@ -14,7 +15,13 @@ export type Plant = {
 };
 export type PlantList = Plant[];
 
-type UseGetPlantsResult = [BigNumber, BigNumber, BigNumber, unknown][];
+type UseGetPlantsResult = [
+  BigNumber,
+  BigNumber,
+  BigNumber,
+  BigNumber,
+  unknown
+][];
 
 const useGetUsersPlants = (account: string | null | undefined) => {
   const [results] = (useContractCall(
@@ -27,8 +34,9 @@ const useGetUsersPlants = (account: string | null | undefined) => {
   ) ?? [[]]) as UseGetPlantsResult[];
 
   const plants: PlantList = results.map(
-    ([generatedAt, lastWateredAt, droughtResistance, kind]) => {
+    ([id, generatedAt, lastWateredAt, droughtResistance, kind]) => {
       return {
+        id,
         generatedAt,
         lastWateredAt,
         droughtResistance,
