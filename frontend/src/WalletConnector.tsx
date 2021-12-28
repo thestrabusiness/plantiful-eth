@@ -16,7 +16,7 @@ const WalletConnector = () => {
       };
 
   return (
-    <div className="text-slate-800 flex items-center">
+    <div className="p-5 text-slate-800 flex items-center justify-end">
       {account && <div className="pr-1 text-sm">{account.slice(0, 6)}...</div>}
       <div className="text-xl self-center px-5 py-3 border border-slate-400 rounded-full">
         <button onClick={() => button.onClick()}>{button.label}</button>
