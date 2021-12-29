@@ -19,7 +19,7 @@ const bigNumberToHours = (value: BigNumber): number => {
 };
 
 const PlantListItem: FC<PlantListItemProps> = ({
-  plant: { id, generatedAt, lastWateredAt, droughtResistance, kind },
+  plant: { id, generatedAt, lastWateredAt, hp, lifecycleState, wateredState },
 }) => {
   const { state, send: waterPlant } = useWaterPlant();
 
@@ -30,8 +30,9 @@ const PlantListItem: FC<PlantListItemProps> = ({
     <div className="text-center mx-2">
       <div>Created at: {bigNumberToDateString(generatedAt)}</div>
       <div>Last watered at: {bigNumberToDateString(lastWateredAt)}</div>
-      <div>Drought resistance: {bigNumberToHours(droughtResistance)} hours</div>
-      <div>Kind: {kind}</div>
+      <div>Moisture levels: {wateredState}</div>
+      <div>Lifecycle State: {lifecycleState}</div>
+      <div>HP: {hp}</div>
       <button
         className="bg-blue-100 border border-blue-200 px-4 py-2 my-2"
         onClick={() => {
