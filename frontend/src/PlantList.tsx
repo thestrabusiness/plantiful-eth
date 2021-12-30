@@ -63,7 +63,7 @@ const PlantList = () => {
         <h1 className="text-center text-2xl mb-5">Plant List</h1>
         <div className="flex flex-row">
           {plants.map((plant) => {
-            return <PlantListItem plant={plant} />;
+            return <PlantListItem plant={plant} key={`plant-${plant.id}`} />;
           })}
         </div>
       </div>
