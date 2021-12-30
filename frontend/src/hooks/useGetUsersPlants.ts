@@ -9,19 +9,30 @@ import {
 export type Plant = {
   id: BigNumber;
   generatedAt: BigNumber;
+  wateringFrequencyInDays: number;
+  hp: number;
   lastWateredAt: BigNumber;
-  droughtResistance: BigNumber;
-  kind: unknown;
+  wateredState: WateredState;
 };
 export type PlantList = Plant[];
 
 type UseGetPlantsResult = [
+  [BigNumber, BigNumber, number, number],
   BigNumber,
-  BigNumber,
-  BigNumber,
-  BigNumber,
-  unknown
+  number
 ][];
+
+export type WateredState = "Underwatered" | "Healthy" | "Overwatered";
+
+interface EnumMapping<T> {
+  [id: number]: T;
+}
+
+const wateredStates: EnumMapping<WateredState> = {
+  0: "Underwatered",
+  1: "Healthy",
+  2: "Overwatered",
+};
 
 const useGetUsersPlants = (account: string | null | undefined) => {
   const [results] = (useContractCall(
@@ -34,13 +45,18 @@ const useGetUsersPlants = (account: string | null | undefined) => {
   ) ?? [[]]) as UseGetPlantsResult[];
 
   const plants: PlantList = results.map(
-    ([id, generatedAt, lastWateredAt, droughtResistance, kind]) => {
+    ([
+      [id, generatedAt, wateringFrequencyInDays, hp],
+      lastWateredAt,
+      wateredState,
+    ]) => {
       return {
         id,
         generatedAt,
+        wateringFrequencyInDays,
+        hp,
         lastWateredAt,
-        droughtResistance,
-        kind,
+        wateredState: wateredStates[wateredState],
       };
     }
   );

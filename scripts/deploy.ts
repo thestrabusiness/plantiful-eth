@@ -21,10 +21,9 @@ async function main() {
 
   await plantifulERC721.deployed();
 
-  plantifulERC721.mint(200_000, "0");
-  plantifulERC721.mint(100_000, "1");
-  plantifulERC721.mint(100_000, "2");
-  plantifulERC721.mint(50_000, "3");
+  plantifulERC721.mint(3);
+  plantifulERC721.mint(4);
+  plantifulERC721.mint(5);
 
   console.log("PlantifulERC721 deployed to:", plantifulERC721.address);
   setEnvValue("REACT_APP_ERC721_CONTRACT_ADDRESS", plantifulERC721.address);

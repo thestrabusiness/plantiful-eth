@@ -14,24 +14,32 @@ const bigNumberToDateString = (value: BigNumber): string => {
   return date.toLocaleString();
 };
 
-const bigNumberToHours = (value: BigNumber): number => {
-  return Math.round(value.toNumber() / 60 / 60);
-};
-
 const PlantListItem: FC<PlantListItemProps> = ({
-  plant: { id, generatedAt, lastWateredAt, droughtResistance, kind },
+  plant: {
+    id,
+    generatedAt,
+    wateringFrequencyInDays,
+    hp,
+    lastWateredAt,
+    wateredState,
+  },
 }) => {
   const { state, send: waterPlant } = useWaterPlant();
 
   const sendingTransaction = state.status === "Mining";
   const buttonLabel = sendingTransaction ? "Watering..." : "Water";
 
+  const lastWateredAtText = lastWateredAt.gt(0)
+    ? bigNumberToDateString(lastWateredAt)
+    : "never";
+
   return (
     <div className="text-center mx-2">
       <div>Created at: {bigNumberToDateString(generatedAt)}</div>
-      <div>Last watered at: {bigNumberToDateString(lastWateredAt)}</div>
-      <div>Drought resistance: {bigNumberToHours(droughtResistance)} hours</div>
-      <div>Kind: {kind}</div>
+      <div>HP: {hp}</div>
+      <div>Water every {wateringFrequencyInDays} day(s)</div>
+      <div>Last watered at {lastWateredAtText}</div>
+      <div>{wateredState}</div>
       <button
         className="bg-blue-100 border border-blue-200 px-4 py-2 my-2"
         onClick={() => {
