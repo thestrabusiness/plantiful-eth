@@ -4,6 +4,7 @@ import chaiAsPromised from "chai-as-promised";
 import { add } from "date-fns";
 
 import { PlantifulERC721, PlantifulERC721__factory } from "../typechain";
+import { wateredStates } from "../frontend/src/types";
 
 chai.use(chaiAsPromised);
 
@@ -103,7 +104,7 @@ describe("Greeter", function () {
         await mintTx.wait();
 
         const wateredState = await contract.getPlantWateredState(0);
-        expect(wateredState).to.equal(1);
+        expect(wateredStates[wateredState]).to.equal("Healthy");
       });
 
       it("returns 'Underwatered' when the first watering has passed", async function () {
@@ -117,7 +118,7 @@ describe("Greeter", function () {
 
         const wateredState = await contract.getPlantWateredState(0);
 
-        expect(wateredState).to.equal(0);
+        expect(wateredStates[wateredState]).to.equal("Underwatered");
       });
     });
 
@@ -130,7 +131,7 @@ describe("Greeter", function () {
         await waterTx.wait();
 
         const wateredState = await contract.getPlantWateredState(0);
-        expect(wateredState).to.equal(1);
+        expect(wateredStates[wateredState]).to.equal("Healthy");
       });
 
       it("returns 'Underwatered' when the plant has not been watered in the watering period", async function () {
@@ -143,7 +144,7 @@ describe("Greeter", function () {
         ]);
 
         const wateredState = await contract.getPlantWateredState(0);
-        expect(wateredState).to.equal(0);
+        expect(wateredStates[wateredState]).to.equal("Underwatered");
       });
 
       it("returns 'Overwatered' when the plant has been watered more than once in the watering period", async function () {
@@ -157,7 +158,7 @@ describe("Greeter", function () {
         await waterTx2.wait();
 
         const wateredState = await contract.getPlantWateredState(0);
-        expect(wateredState).to.equal(2);
+        expect(wateredStates[wateredState]).to.equal("Overwatered");
       });
     });
   });
