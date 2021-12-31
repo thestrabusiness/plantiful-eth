@@ -121,6 +121,10 @@ contract PlantifulERC721 is ERC721, Ownable {
     }
   }
 
+  function getPlantWateringTimes(uint256 tokenId) public view returns(uint256[] memory) {
+    return _wateringTimes[tokenId];
+  }
+
   function _beforeTokenTransfer(
     address from,
     address to,
