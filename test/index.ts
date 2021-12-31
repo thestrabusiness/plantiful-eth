@@ -8,7 +8,7 @@ import { wateredStates } from "../frontend/src/types";
 
 chai.use(chaiAsPromised);
 
-describe("Greeter", function () {
+describe("PlantifulERC721", function () {
   let Contract: PlantifulERC721__factory;
   let contract: PlantifulERC721;
   let ownerAddress: string;
