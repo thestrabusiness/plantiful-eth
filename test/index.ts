@@ -1,7 +1,7 @@
 import chai, { expect } from "chai";
-import { ethers } from "hardhat";
-import * as sinon from "sinon";
+import hre, { ethers } from "hardhat";
 import chaiAsPromised from "chai-as-promised";
+import { add } from "date-fns";
 
 import { PlantifulERC721, PlantifulERC721__factory } from "../typechain";
 
@@ -11,6 +11,10 @@ describe("Greeter", function () {
   let Contract: PlantifulERC721__factory;
   let contract: PlantifulERC721;
   let ownerAddress: string;
+
+  this.beforeEach(async function () {
+    await hre.network.provider.send("hardhat_reset");
+  });
 
   this.beforeEach(async () => {
     Contract = await ethers.getContractFactory("PlantifulERC721");
@@ -89,6 +93,72 @@ describe("Greeter", function () {
         Error,
         "VM Exception while processing transaction: reverted with reason string 'You can't water someone else's plant'"
       );
+    });
+  });
+
+  describe("getPlantWateredState", function () {
+    describe("for a plant that was just generated and not yet watered", function () {
+      it("returns 'Healthy' when the first watering time hasn't passed", async function () {
+        const mintTx = await contract.mint(1);
+        await mintTx.wait();
+
+        const wateredState = await contract.getPlantWateredState(0);
+        expect(wateredState).to.equal(1);
+      });
+
+      it("returns 'Underwatered' when the first watering has passed", async function () {
+        const wateringFrequency = 3;
+        const mintTx = await contract.mint(wateringFrequency);
+        await mintTx.wait();
+
+        await ethers.provider.send("evm_mine", [
+          add(new Date(), { days: wateringFrequency + 1 }).getTime() / 1000,
+        ]);
+
+        const wateredState = await contract.getPlantWateredState(0);
+
+        expect(wateredState).to.equal(0);
+      });
+    });
+
+    describe("for a plant that has been watered at least once", function () {
+      it("returns 'Healthy' when the plant has been watered once in the watering period", async function () {
+        const mintTx = await contract.mint(1);
+        await mintTx.wait();
+
+        const waterTx = await contract.water(0);
+        await waterTx.wait();
+
+        const wateredState = await contract.getPlantWateredState(0);
+        expect(wateredState).to.equal(1);
+      });
+
+      it("returns 'Underwatered' when the plant has not been watered in the watering period", async function () {
+        const wateringFrequency = 1;
+        const mintTx = await contract.mint(wateringFrequency);
+        await mintTx.wait();
+
+        await ethers.provider.send("evm_mine", [
+          add(new Date(), { days: wateringFrequency + 1 }).getTime() / 1000,
+        ]);
+
+        const wateredState = await contract.getPlantWateredState(0);
+        expect(wateredState).to.equal(0);
+      });
+
+      it("returns 'Overwatered' when the plant has been watered more than once in the watering period", async function () {
+        const wateringFrequency = 1;
+        const mintTx = await contract.mint(wateringFrequency);
+        await mintTx.wait();
+
+        const waterTx = await contract.water(0);
+        const waterTx2 = await contract.water(0);
+        await waterTx.wait();
+        await waterTx2.wait();
+
+        const wateredState = await contract.getPlantWateredState(0);
+        expect(wateredState).to.equal(2);
+      });
     });
   });
 });
