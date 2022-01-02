@@ -4,7 +4,7 @@ import chaiAsPromised from "chai-as-promised";
 import { add } from "date-fns";
 
 import { PlantifulERC721, PlantifulERC721__factory } from "../typechain";
-import { wateredStates } from "../frontend/src/types";
+import { wateredStates, lifecycleStates } from "../frontend/src/types";
 
 chai.use(chaiAsPromised);
 
@@ -19,7 +19,7 @@ describe("PlantifulERC721", function () {
 
   this.beforeEach(async () => {
     Contract = await ethers.getContractFactory("PlantifulERC721");
-    contract = await Contract.deploy("Plantiful", "PTFL");
+    contract = await Contract.deploy();
     await contract.deployed();
     ownerAddress = await contract.owner();
   });
@@ -160,6 +160,89 @@ describe("PlantifulERC721", function () {
         const wateredState = await contract.getPlantWateredState(0);
         expect(wateredStates[wateredState]).to.equal("Overwatered");
       });
+    });
+  });
+
+  describe("getPlantLifecycleState", function () {
+    it("returns 'Seed' for  a plant less than 3 days old", async function () {
+      const mintTx = await contract.mint(1);
+      await mintTx.wait();
+
+      const lifecyleState = await contract.getPlantLifecycleState(0);
+      expect(lifecycleStates[lifecyleState]).to.equal("Seed");
+    });
+
+    it("returns 'Seedling' for a plant between 3-7 days old", async function () {
+      const mintTx = await contract.mint(1);
+      await mintTx.wait();
+
+      await ethers.provider.send("evm_mine", [
+        add(new Date(), { days: 4 }).getTime() / 1000,
+      ]);
+
+      const lifecyleState = await contract.getPlantLifecycleState(0);
+      expect(lifecycleStates[lifecyleState]).to.equal("Seedling");
+    });
+
+    it("returns 'Young' for a plant between 7-14 days old", async function () {
+      const mintTx = await contract.mint(1);
+      await mintTx.wait();
+
+      await ethers.provider.send("evm_mine", [
+        add(new Date(), { days: 8 }).getTime() / 1000,
+      ]);
+
+      const lifecyleState = await contract.getPlantLifecycleState(0);
+      expect(lifecycleStates[lifecyleState]).to.equal("Young");
+    });
+
+    it("returns 'Mature' for a plant between 14-21 days old", async function () {
+      const mintTx = await contract.mint(1);
+      await mintTx.wait();
+
+      await ethers.provider.send("evm_mine", [
+        add(new Date(), { days: 15 }).getTime() / 1000,
+      ]);
+
+      const lifecyleState = await contract.getPlantLifecycleState(0);
+      expect(lifecycleStates[lifecyleState]).to.equal("Mature");
+    });
+
+    it("returns 'Thriving' for a plant greater than 21 days old", async function () {
+      const mintTx = await contract.mint(1);
+      await mintTx.wait();
+
+      await ethers.provider.send("evm_mine", [
+        add(new Date(), { days: 22 }).getTime() / 1000,
+      ]);
+
+      const lifecyleState = await contract.getPlantLifecycleState(0);
+      expect(lifecycleStates[lifecyleState]).to.equal("Thriving");
+    });
+  });
+
+  describe("tokenURI", function () {
+    it("contains the plant's watered state", async function () {
+      const wateringFrequency = 1;
+      const mintTx = await contract.mint(wateringFrequency);
+      await mintTx.wait();
+
+      const waterTx = await contract.water(0);
+      const waterTx2 = await contract.water(0);
+      await waterTx.wait();
+      await waterTx2.wait();
+
+      const tokenUri = await contract.tokenURI(0);
+      expect(tokenUri).to.contain("overwatered");
+    });
+
+    it("contains the plant's lifecycle state", async function () {
+      const wateringFrequency = 1;
+      const mintTx = await contract.mint(wateringFrequency);
+      await mintTx.wait();
+
+      const tokenUri = await contract.tokenURI(0);
+      expect(tokenUri).to.contain("seed");
     });
   });
 });

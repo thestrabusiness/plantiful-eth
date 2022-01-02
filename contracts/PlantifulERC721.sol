@@ -2,11 +2,19 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract PlantifulERC721 is ERC721, Ownable {
+contract PlantifulERC721 is ERC721Enumerable, Ownable {
+  using Strings for uint256;
+
   enum WateredState { Underwatered, Healthy, Overwatered }
+  enum LifecycleState { Seed, Seedling, Young, Mature, Thriving  }
+
+  string baseURI = "ipfs://";
+  string public baseExtension = ".json";
+
+  uint256 nextId = 0;
 
   struct Plant {
     uint256 id;
@@ -22,12 +30,22 @@ contract PlantifulERC721 is ERC721, Ownable {
   }
 
 
-  uint256 nextId = 0;
-
   mapping (uint256 => Plant) private _plants;
   mapping (uint256 => uint256[]) private _wateringTimes;
 
-  constructor(string memory name, string memory symbol) ERC721(name, symbol) {}
+  constructor() ERC721("Plantiful", "PLANT") {}
+
+  function _baseURI() internal view virtual override returns (string memory) {
+    return baseURI;
+  }
+
+  function setBaseURI(string memory _newBaseURI) public onlyOwner {
+    baseURI = _newBaseURI;
+  }
+
+  function setBaseExtension(string memory _newBaseExtension) public onlyOwner {
+    baseExtension = _newBaseExtension;
+  }
 
   function mint(uint8 wateringFrequencyInDays) public onlyOwner {
     Plant storage plant = _plants[nextId];
@@ -123,6 +141,92 @@ contract PlantifulERC721 is ERC721, Ownable {
 
   function getPlantWateringTimes(uint256 tokenId) public view returns(uint256[] memory) {
     return _wateringTimes[tokenId];
+  }
+
+  function getPlantLifecycleState(uint256 tokenId) public view returns(LifecycleState) {
+    Plant memory plant = _plants[tokenId];
+    uint256 timeInSecondsSinceBirth = block.timestamp - plant.generatedAt;
+
+    if (timeInSecondsSinceBirth <= 3 days) {
+      return LifecycleState.Seed;
+    } else if (
+      timeInSecondsSinceBirth > 3 days &&
+      timeInSecondsSinceBirth <= 7 days
+    ) {
+      return LifecycleState.Seedling;
+    } else if (
+      timeInSecondsSinceBirth > 7 days &&
+      timeInSecondsSinceBirth <= 14 days
+    ) {
+      return LifecycleState.Young;
+    } else if (
+      timeInSecondsSinceBirth > 14 days &&
+      timeInSecondsSinceBirth <= 21 days
+    ) {
+      return LifecycleState.Mature;
+    } else {
+      return LifecycleState.Thriving;
+    }
+  }
+
+  function tokenURI(uint256 tokenId)
+  public
+  view
+  virtual
+  override
+  returns (string memory)
+  {
+    require(
+      _exists(tokenId),
+      "ERC721Metadata: URI query for nonexistent token"
+    );
+
+    string memory currentBaseURI = _baseURI();
+
+    WateredState wateredState = getPlantWateredState(tokenId);
+    string memory wateredStatePart = wateredStateToURIString(wateredState);
+
+    LifecycleState lifecyleState = getPlantLifecycleState(tokenId);
+    string memory lifecyleStatePart = lifecycleStateToURIString(lifecyleState);
+
+    string memory tokenIdentifier = string(abi.encodePacked(
+      tokenId.toString(),
+      "-",
+      wateredStatePart,
+      "-",
+      lifecyleStatePart
+    ));
+
+    return bytes(currentBaseURI).length > 0
+      ? string(abi.encodePacked(currentBaseURI, tokenIdentifier, baseExtension))
+      : "";
+  }
+
+  function wateredStateToURIString(WateredState wateredState) internal pure returns(string memory) {
+    if(wateredState == WateredState.Underwatered) {
+      return "underwatered";
+    } else if (wateredState == WateredState.Healthy) {
+      return "healthy";
+    } else if (wateredState == WateredState.Overwatered) {
+      return "overwatered";
+    } else {
+      revert();
+    }
+  }
+  function lifecycleStateToURIString(LifecycleState lifecyleState) internal pure returns(string memory) {
+    if(lifecyleState == LifecycleState.Seed) {
+      return "seed";
+    } else if (lifecyleState == LifecycleState.Seedling) {
+      return "seedling";
+    } else if (lifecyleState == LifecycleState.Young) {
+      return "young";
+    } else if (lifecyleState == LifecycleState.Mature) {
+      return "mature";
+    } else if (lifecyleState == LifecycleState.Thriving) {
+      return "thriving";
+    } else {
+      revert();
+    }
   }
 
   function _beforeTokenTransfer(
